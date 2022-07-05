@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="noticens">
+<!-- 목록 조회 -->
+	<select id="list" parameterType="map" resultType="notice">
+		select * from (select rowNum rn,
+		a.* from (select * from notice_board order by notice_num desc)a )
+		where rn between #{startRow} and #{endRow}
+	</select>
+	<!-- 게시글 수 -->
+	<select id="getTotal" resultType="integer">
+		select count(*) from notice_board
+	</select>
+<!-- 	<insert id="insert" parameterType="board" >
+		<selectKey keyProperty="notice_num" order="BEFORE"
+			resultType="integer">
+			select nvl(max(notice_num), 0) + 1 notice_num from
+			notice_board
+		</selectKey>
+		insert into notice_board values(#{notice_num}, #{notice_title},
+		sysdate, #{notice_content},#{notice_read_cnt},#{id})
+	</insert> -->
+	<select id="notice_num" resultType="integer">
+		select nvl(max(notice_num),0) +1 notice_num from notice_board
+	</select>
+	<insert id="insert" parameterType="notice">		
+			insert into notice_board values(#{notice_num}, #{notice_title}, sysdate, #{notice_content}, 0, #{id})		
+	</insert>
+	<!-- 게시글 조회수 증가 -->
+	<update id="read_cntUpdate" parameterType="integer">
+		update notice_board set notice_read_cnt = notice_read_cnt + 1 where notice_num = #{notice_num}
+	</update>
+	<!-- 상세페이지 - 데이터 조회 -->
+	<select id="selectOne"  resultType="notice">
+		select * from notice_board where notice_num=#{notice_num}	
+	</select>
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="notice">
+		update notice_board set notice_title=#{notice_title}, notice_content=#{notice_content}
+		where notice_num=#{notice_num}
+	</update>
+	<!-- 게시글 삭제 -->
+	<delete id="delete" parameterType="integer">
+		delete from notice_board where notice_num=#{notice_num}
+	</delete>
+	<!-- 글자검색 시 총 갯수 -->
+	<select id="getSearchTotal" resultType="integer">
+		select count(*) from notice_board where notice_title like '%'||#{search}||'%' or notice_content like '%'||#{search}||'%'
+	</select>
+	
+	<!-- 글자로 검색 list -->
+	<select id="listSearch" resultType="notice">
+		select * from (select rowNum rn, a.* from (select * from notice_board where   notice_title like '%'||#{search}||'%' or notice_content like '%'||#{search}||'%' order by notice_num)a) where rn between #{startRow} and #{endRow}
+	</select>
+	
+	<!-- 취미 게시판 검색 -->
+	<select id="listSearch2" resultType="notice">
+		select * from (select rowNum rn, a.* from (select * from review_board where
+		review_title like '%'||#{search}||'%' or review_content like '%'||#{search}||'%' order by review_num)a)
+		where rn between #{startRow} and #{endRow}
+	</select>
+	</mapper>

@@ -1,0 +1,27 @@
+*{
+	margin-left:200px;
+    margin: 0;
+    padding: 0;
+}
+
+
+.text_id{
+	width: 100%;
+	margin: auto;
+	
+}
+.text_title{
+	width: 100%;
+	margin: auto;
+}
+.text_row{
+	width: 100%;
+	margin: auto;
+}
+.text_icon{
+	float: right;
+	cursor: pointer;
+}
+.text_icon > button{
+	cursor: pointer;
+}

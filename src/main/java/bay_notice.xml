@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bay_noticens">
+<!-- 거래 목록 조회 -->
+	<select id="list" parameterType="map" resultType="bay_notice">	
+		select * from (select rowNum rn,
+		a.* from (select * from bay_notice_board order by bay_notice_num desc)a )
+		where rn between #{startRow} and #{endRow}
+	</select>
+	<!-- 	계시글 수 -->
+	<select id="getTotal" resultType="integer">
+		select count(*) from bay_notice_board
+	</select>
+	<select id="bay_notice_num" resultType="integer">
+		select nvl(max(bay_notice_num),0) +1 bay_notice_num from bay_notice_board
+	</select>
+	<insert id="insert" parameterType="bay_notice">		
+		<selectKey keyProperty="bay_notice_num" order="BEFORE"
+			resultType="integer">
+			select nvl(max(bay_notice_num), 0) + 1 bay_notice_num from
+			bay_notice_board
+		</selectKey>
+			insert into bay_notice_board values(#{bay_notice_num},
+			 #{bay_notice_title},sysdate,
+			 #{bay_notice_content},0,0,0,0,0,#{bay_notice_price},
+			 #{thumbnail,jdbcType=VARCHAR},#{id})		
+	</insert>
+	<!-- 게시글 조회수 증가 -->
+	<update id="read_cntUpdate" parameterType="integer">
+		update bay_notice_board set bay_notice_read_cnt = bay_notice_read_cnt + 1 where bay_notice_num = #{bay_notice_num}
+	</update>
+	<!-- 상세페이지 - 데이터 조회 -->
+	<select id="selectOne"  resultType="bay_notice">
+		select * from bay_notice_board where bay_notice_num=#{bay_notice_num}	
+	</select>
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="bay_notice">
+		update bay_notice_board set bay_notice_title=#{bay_notice_title}, 
+		bay_notice_content=#{bay_notice_content},bay_notice_price=${bay_notice_price}
+		<if test="thumbnail != null and thumbnail !=''">
+			,thumbnail = #{thumbnail,jdbcType=VARCHAR}
+		</if>
+		where bay_notice_num = #{bay_notice_num}
+	</update>
+	<!-- 게시글 삭제 -->
+	<delete id="delete" parameterType="integer">
+		delete from bay_notice_board 
+		where bay_notice_num=#{bay_notice_num}
+	</delete>
+</mapper>

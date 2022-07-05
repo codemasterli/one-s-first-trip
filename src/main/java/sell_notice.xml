@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sell_noticens">
+<!-- 거래 목록 조회 -->
+	<select id="list" parameterType="map" resultType="sell_notice">	
+		select * from (select rowNum rn,
+		a.* from (select * from sell_notice_board order by sell_notice_num desc)a )
+		where rn between #{startRow} and #{endRow}
+	</select>
+	<!-- 	계시글 수 -->
+	<select id="getTotal" resultType="integer">
+		select count(*) from sell_notice_board
+	</select>
+	<select id="sell_notice_num" resultType="integer">
+		select nvl(max(sell_notice_num),0) +1 sell_notice_num from sell_notice_board
+	</select>
+	<insert id="insert" parameterType="sell_notice">		
+		<selectKey keyProperty="sell_notice_num" order="BEFORE"
+			resultType="integer">
+			select nvl(max(sell_notice_num), 0) + 1 sell_notice_num from
+			sell_notice_board
+		</selectKey>
+			insert into sell_notice_board values(#{sell_notice_num},
+			 #{sell_notice_title}, sysdate, 
+			 #{sell_notice_content}, 0,0,0,0,0,#{sell_notice_price},'n',
+			 #{thumbnail,jdbcType=VARCHAR},#{id})		
+	</insert>
+	<!-- 게시글 조회수 증가 -->
+	<update id="read_cntUpdate" parameterType="integer">
+		update sell_notice_board set sell_notice_read_cnt = sell_notice_read_cnt + 1 where sell_notice_num = #{sell_notice_num}
+	</update>
+	<!-- 상세페이지 - 데이터 조회 -->
+	<select id="selectOne"  resultType="sell_notice">
+		select * from sell_notice_board where sell_notice_num=#{sell_notice_num}	
+	</select>
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="sell_notice">
+		update sell_notice_board set sell_notice_title=#{sell_notice_title}, 
+		sell_notice_content=#{sell_notice_content},sell_notice_price=${sell_notice_price}
+		<if test="thumbnail != null and thumbnail !=''">
+			,thumbnail = #{thumbnail,jdbcType=VARCHAR}
+		</if>
+		where sell_notice_num = #{sell_notice_num}
+	</update>
+	<!-- 게시글 삭제 -->
+	<delete id="delete" parameterType="integer">
+		delete from sell_notice_board 
+		where sell_notice_num=#{sell_notice_num}
+	</delete>
+</mapper>

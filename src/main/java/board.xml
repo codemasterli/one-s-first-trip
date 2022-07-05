@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardns">
+	<!-- 게시글 입력
+	sysdate : 작성 날짜
+	입력 받을 항목들 : 게시글 번호 / 제목 / 작성날짜 / 본문 / 썸네일 / 취미 태그
+	기본값 0 인 항목들 : 조회수 / 좋아요 / 답변글 그룹 / 답변 순서 / 들여쓰기 레벨  -->
+	<insert id="insert" parameterType="board">
+		<selectKey keyProperty="review_num" order="BEFORE"
+			resultType="integer">
+			select nvl(max(review_num), 0) + 1 review_num from
+			review_board
+		</selectKey>
+		insert into review_board values(#{review_num}, #{review_title},
+		sysdate, #{review_content}, 0, 0, 0, 0, 0,#{review_hb_tag},
+		#{thumbnail,jdbcType=VARCHAR},#{id})
+	</insert>
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="board">
+		update review_board set review_title = #{review_title}, review_content
+		= #{review_content}
+		<if test="thumbnail != null and thumbnail !=''">
+			, thumbnail = #{thumbnail,jdbcType=VARCHAR}
+		</if>
+		where review_num = #{review_num}
+	</update>
+
+	<!-- 게시글 삭제 -->
+	<update id="delete" parameterType="integer">
+		DELETE FROM review_board
+		where review_num = #{review_num}
+	</update>
+
+	<!-- 게시글 조회수 증가 -->
+	<update id="readcountUpdate" parameterType="integer">
+		update review_board
+		set
+		review_read_cnt = review_read_cnt + 1 where review_num = #{review_num}
+	</update>
+	
+	<!-- 게시글 좋아요 증가 -->
+	<update id="likesPlus" parameterType="integer">
+		update review_board set review_likes = review_likes + 1 where review_num = #{review_num}
+	</update>
+
+	<!-- 게시글 좋아요 감소 -->
+	<update id="likesMinus" parameterType="integer">
+		update review_board set likes =
+		likes - 1 where review_num = #{review_num}
+	</update>
+
+	
+	<!-- 상세페이지 - 데이터 조회 -->
+	<select id="selectOne" resultType="board">
+		select * from review_board where review_num=#{review_num}
+	</select>
+
+<!-- 메인페이지 - 게시글 수 -->
+	<select id="getTotal" parameterType="map" resultType="integer">
+		select count(*) from review_board
+		<if test="review_hb_tag != null and review_hb_tag != ''">
+			where review_hb_tag like '%'||#{review_hb_tag}||'%'
+		</if>
+	</select>
+
+	<!-- 메인페이지 - 게시글 목록 최신순 -->
+	<select id="list" parameterType="map" resultType="board">
+		select * from (select rowNum rn,
+		a.* from (select * from review_board order by review_num desc)a )
+		where rn between #{startRow} and #{endRow}
+	</select>
+
+	<!-- 조회수 상위 4개 게시글 선택 -->
+	<select id="mostView" parameterType="map" resultType="board">
+		SELECT * FROM (SELECT ROWNUM rn, a.* from
+		(select * from review_board ORDER BY review_read_cnt desc)a)
+		where rn BETWEEN 1 and 4
+	</select>
+	
+	<!-- 취미 태그 선택 -->
+	<select id="hb_tag_list" parameterType="map" resultType="board">
+		SELECT Review_hb_tag FROM review_board
+	</select>
+	
+	<!-- 선택한 취미 태그 list -->
+	<select id="hb_list" resultType="board">
+		select * from 
+        (select rowNum rn, a.* from (select * from review_board where
+        review_hb_tag like '%'||#{review_hb_tag}||'%' order by review_num)a) 
+        where rn between #{startRow} and #{endRow}
+	</select>
+	
+	<!-- 선택한 취미 태그의 총 게시글 수 -->
+	<select id="getTagTotal" resultType="integer">
+	select count(*) from review_board where review_hb_tag=#{review_hb_tag}
+	</select>
+	
+	</mapper>
